@@ -1,0 +1,115 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.openapi.generator' version '7.13.0'
+}
+
+group = 'xyz.kajih'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // OpenApi Generator
+    implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.30'
+
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    implementation platform("org.springframework.modulith:spring-modulith-bom:1.3.5")
+
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.0'
+    implementation 'net.datafaker:datafaker:2.4.3'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Define the path to your OpenAPI YAML file
+def generatedDir = layout.buildDirectory.dir("generated").get().asFile
+def openApiSpec = "${layout.projectDirectory}/src/main/resources/openapi.yaml"
+
+openApiGenerate {
+}
+
+task generateServer(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    generatorName = 'spring'
+    library = "spring-boot"
+    inputSpec = openApiSpec
+    outputDir = "$generatedDir"
+    apiPackage = 'xyz.kajih.tenken.server.api'
+    modelPackage = 'xyz.kajih.tenken.server.model'
+    invokerPackage = 'xyz.kajih.tenken.server.invoker'
+    configOptions = [
+            useSpringBoot3          : 'true',
+            reactive                : 'true',
+            interfaceOnly           : 'true',
+            generateControllerAdvice: 'false',
+            generateInterfaces      : 'true',
+            dateLibrary             : 'java8'
+    ]
+}
+
+task generateClient(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    generatorName = 'java'
+    library = "webclient"
+    inputSpec = openApiSpec
+    outputDir = "$generatedDir"
+    apiPackage = 'xyz.kajih.tenken.client.api'
+    modelPackage = 'xyz.kajih.tenken.client.model'
+    invokerPackage = 'xyz.kajih.tenken.client.invoker'
+
+    configOptions = [
+            annotationLibrary   : 'swagger2',
+//            generateClientAsBean: 'true',
+            useJakartaEe        : 'true',
+            dateLibrary         : 'java8',
+            useSpringBoot3      : 'true'
+    ]
+}
+
+clean.doFirst {
+    delete "$generatedDir"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir "${generatedDir}/src/main/java"
+        }
+    }
+}
+
+compileJava.dependsOn generateServer
+compileJava.dependsOn generateClient
