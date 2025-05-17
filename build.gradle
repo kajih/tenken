@@ -1,8 +1,12 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
+//    id 'org.springframework.boot' version '3.4.5'
+    id 'org.springframework.boot' version '3.5.0-RC1'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.openapi.generator' version '7.13.0'
+//    id "com.github.ben-manes.versions" version "0.52.0"
 }
 
 group = 'xyz.kajih'
@@ -14,14 +18,16 @@ java {
     }
 }
 
+repositories {
+    gradlePluginPortal()
+    maven { url = 'https://repo.spring.io/milestone' }
+    maven { url = 'https://repo.spring.io/snapshot' }
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
@@ -46,7 +52,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
-    implementation platform("org.springframework.modulith:spring-modulith-bom:1.3.5")
+    implementation platform("org.springframework.modulith:spring-modulith-bom:1.4.0-RC1")
 
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.0'
     implementation 'net.datafaker:datafaker:2.4.3'
@@ -63,7 +69,7 @@ def openApiSpec = "${layout.projectDirectory}/src/main/resources/openapi.yaml"
 openApiGenerate {
 }
 
-task generateServer(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+tasks.register('generateServer', GenerateTask) {
     generatorName = 'spring'
     library = "spring-boot"
     inputSpec = openApiSpec
@@ -81,7 +87,7 @@ task generateServer(type: org.openapitools.generator.gradle.plugin.tasks.Generat
     ]
 }
 
-task generateClient(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+tasks.register('generateClient', GenerateTask) {
     generatorName = 'java'
     library = "webclient"
     inputSpec = openApiSpec
@@ -91,11 +97,11 @@ task generateClient(type: org.openapitools.generator.gradle.plugin.tasks.Generat
     invokerPackage = 'xyz.kajih.tenken.client.invoker'
 
     configOptions = [
-            annotationLibrary   : 'swagger2',
+            annotationLibrary: 'swagger2',
 //            generateClientAsBean: 'true',
-            useJakartaEe        : 'true',
-            dateLibrary         : 'java8',
-            useSpringBoot3      : 'true'
+            useJakartaEe     : 'true',
+            dateLibrary      : 'java8',
+            useSpringBoot3   : 'true'
     ]
 }
 
