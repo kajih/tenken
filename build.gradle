@@ -2,10 +2,9 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.openapi.generator' version '7.13.0'
-//    id "com.github.ben-manes.versions" version "0.52.0"
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.openapi.generator)
+    alias(libs.plugins.ben.manes.versions)
 }
 
 group = 'xyz.kajih'
@@ -31,31 +30,33 @@ configurations {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation libs.spring.boot.starter.webflux
 
     // OpenApi Generator
-    implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-    implementation 'io.swagger.core.v3:swagger-annotations:2.2.30'
+    implementation libs.jakarta.annotation.api
+    implementation libs.spring.boot.starter.validation
+    implementation libs.jackson.databind.nullable
+    implementation libs.swagger.annotations
 
-    annotationProcessor 'org.projectlombok:lombok'
-    compileOnly 'org.projectlombok:lombok'
 
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'io.projectreactor:reactor-test'
-    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    developmentOnly libs.spring.boot.dev.tools
+    annotationProcessor libs.spring.boot.configuration.processor
+
+    testImplementation libs.spring.boot.starter.test
+
+    testImplementation libs.reactor.test
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation platform("org.springframework.modulith:spring-modulith-bom:1.4.0-RC1")
 
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.0'
-    implementation 'net.datafaker:datafaker:2.4.3'
+    implementation libs.jackson.dataformat.csv
+    implementation libs.datafaker
 }
 
 tasks.named('test') {
