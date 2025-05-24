@@ -1,30 +1,44 @@
 package xyz.kajih.tenken.web;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import xyz.kajih.tenken.server.api.UsersApi;
 import xyz.kajih.tenken.server.model.User;
 
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
 public class TenController implements UsersApi {
+
+    private static final Set<User> users = ConcurrentHashMap.newKeySet();
+
     /**
      * POST /users : Create a new user
      *
-     * @param user     (required)
+     * @param userMono (required)
      * @param exchange
      * @return User created successfully (status code 201)
      * or Invalid input (status code 400)
      * or Unauthorized (status code 401)
      */
     @Override
-    public Mono<ResponseEntity<User>> createUser(Mono<User> user, ServerWebExchange exchange) {
-        return UsersApi.super.createUser(user, exchange);
+    public Mono<ResponseEntity<User>> createUser(Mono<User> userMono, ServerWebExchange exchange) {
+        return userMono
+                .map(user -> user.id(UUID.randomUUID())) // assign new UUID
+                .doOnNext(users::add)                         // add to in-memory list
+                .map(savedUser -> ResponseEntity
+                        .status(HttpStatus.ACCEPTED)
+                        .body(savedUser));                    // wrap response
     }
 
     /**
